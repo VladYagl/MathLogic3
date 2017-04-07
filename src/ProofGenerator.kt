@@ -80,7 +80,7 @@ class ProofGenerator(val a: Int, val b: Int) : ProofChecker() {
         else -> Stroke(makeNumber(number - 1))
     }
 
-    private fun proofLess(a: Int, b: Int): List<Expression> {
+    private fun proofLess(): List<Expression> {
         return prepareAxioms() + onlyZeros + useAxiom(5, makeNumber(a)) +
                 (0..b - a - 1).map {
                     val sum = "a + b".substitute(a, it) as Term
@@ -98,10 +98,8 @@ class ProofGenerator(val a: Int, val b: Int) : ProofChecker() {
                 "?p(a+p=b)".substitute(a, b, b - a)
     }
 
-    private val comFile = File("src/com.txt").readLines()
-    private val lemmaFile = File("src/lemma.txt").readLines()
-    private val lemma2File = File("src/lemma2.txt").readLines()
-    private val morganFile = File("src/morgan.txt").readLines()
+    private val prefixFile = File("src/ProofPrefix.txt").readLines()
+    private val coreFile = File("src/ProofCore.txt").readLines()
 
     fun Expression.doReplace(): Expression {
         if (this is Quantifier) {
@@ -110,9 +108,9 @@ class ProofGenerator(val a: Int, val b: Int) : ProofChecker() {
         if (this is Variable) {
             return this
         }
-        if (this.name == "B" || this.name == "C") {
+        if (this.name == "AddB" || this.name == "AddA-B") {
             var expression = this.args[0].doReplace() as Term
-            val count = if (this.name == "B") b else a - b - 1
+            val count = if (this.name == "AddB") b else a - b - 1
             (0..count - 1).forEach {
                 expression = Stroke(expression)
             }
@@ -125,29 +123,16 @@ class ProofGenerator(val a: Int, val b: Int) : ProofChecker() {
     }
 
 
-    private fun proofMoreOrEqual(a: Int, b: Int): List<Expression> {
-        val result = ArrayList<Expression>()
-        result.addAll(prepareAxioms())
-        result.addAll(comFile.map { it.parse() as Expression })
-        result.addAll(lemmaFile.map { it.parse() as Expression })
-
-        result.addAll(lemma2File.map { ((it.parse() as Expression).doReplace().toString().parse() as Expression) })
-        result.addAll(morganFile.map { ((it.parse() as Expression).doReplace().toString().parse() as Expression) })
-
-        return result
-    }
-
-    fun doSomeStuff() {
-        File("src/lemma.txt").writer().use {
-            it.append(lemmaFile.map { it.parse() as Expression }.joinToString(separator = "\n"))
-        }
-
+    private fun proofMoreOrEqual(): List<Expression> {
+        return prepareAxioms() +
+                prefixFile.map { it.parse() as Expression } +
+                coreFile.map { ((it.parse() as Expression).doReplace().toString().parse() as Expression) }
     }
 
     val proof
         get() = if (a < b) {
-            proofLess(a, b)
+            proofLess()
         } else {
-            proofMoreOrEqual(a, b)
+            proofMoreOrEqual()
         }
 }

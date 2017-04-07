@@ -6,12 +6,7 @@ import java.io.File
 val proofFile = File("proof.txt")
 
 fun main(args: Array<String>) {
-//    val gena = ProofGenerator(0, 1);
-//    gena.doSomeStuff()
-//    while(true) {}
     val proof = ProofGenerator(args[0].toInt(), args[1].toInt()).proof
-
-//    println(proof.joinToString(separator = "\n"))
 
     proofFile.writer().use { writer ->
         writer.append(proof.joinToString(separator = "\n"))
